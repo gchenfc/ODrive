@@ -323,11 +323,12 @@ bool Encoder::abs_spi_init() {
     if ((config_.mode & MODE_FLAG_ABS) == 0x0)
         return false;
 
-    uint32_t cr1, cr2;
-    cr1 = hw_config_.spi->Instance->CR1;
-    cr2 = hw_config_.spi->Instance->CR2;
+    // uint32_t cr1, cr2;
+    // cr1 = hw_config_.spi->Instance->CR1;
+    // cr2 = hw_config_.spi->Instance->CR2;
 
     SPI_HandleTypeDef* spi      = hw_config_.spi;
+    HAL_SPI_DeInit(spi);
     spi->Init.Mode              = SPI_MODE_MASTER;
     spi->Init.Direction         = SPI_DIRECTION_2LINES;
     spi->Init.DataSize          = SPI_DATASIZE_16BIT;
@@ -342,14 +343,14 @@ bool Encoder::abs_spi_init() {
     if (config_.mode == MODE_SPI_ABS_AEAT) {
         spi->Init.CLKPolarity   = SPI_POLARITY_HIGH;
     }
-    HAL_SPI_DeInit(spi);
+
     HAL_SPI_Init(spi);
     //stash our configuration
     abs_spi_cr1 = hw_config_.spi->Instance->CR1;
     abs_spi_cr2 = hw_config_.spi->Instance->CR2;
 
-    hw_config_.spi->Instance->CR1 = cr1;
-    hw_config_.spi->Instance->CR2 = cr2;
+    // hw_config_.spi->Instance->CR1 = cr1;
+    // hw_config_.spi->Instance->CR2 = cr2;
     return true;
 }
 
@@ -360,8 +361,8 @@ bool Encoder::abs_spi_start_transaction() {
             return false;
         }
         //apply the stashed configuration
-        hw_config_.spi->Instance->CR1 = abs_spi_cr1;
-        hw_config_.spi->Instance->CR2 = abs_spi_cr2;
+        // hw_config_.spi->Instance->CR1 = abs_spi_cr1;
+        // hw_config_.spi->Instance->CR2 = abs_spi_cr2;
         HAL_GPIO_WritePin(abs_spi_cs_port_, abs_spi_cs_pin_, GPIO_PIN_RESET);
         HAL_SPI_TransmitReceive_DMA(hw_config_.spi, (uint8_t*)abs_spi_dma_tx_, (uint8_t*)abs_spi_dma_rx_, 1);
     }
