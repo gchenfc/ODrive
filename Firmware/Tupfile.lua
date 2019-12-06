@@ -3,6 +3,7 @@ tup.include('build.lua')
 
 -- Switch between board versions
 boardversion = tup.getconfig("BOARD_VERSION")
+print(boardversion)
 if boardversion == "v3.1" then
     boarddir = 'Board/v3' -- currently all platform code is in the same v3.3 directory
     FLAGS += "-DHW_VERSION_MAJOR=3 -DHW_VERSION_MINOR=1"

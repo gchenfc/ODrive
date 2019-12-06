@@ -32,6 +32,13 @@ class CANSimple {
         MSG_RESET_ODRIVE,
         MSG_GET_VBUS_VOLTAGE,
         MSG_SET_PI_GAIN,
+        //==================customized item===============
+        MSG_SET_POSITION_GAIN,
+        MSG_CLEAR_ERROR,
+        MSG_GET_CURRENT_LIMIT,
+        MSG_SET_CURRENT_LIMIT,
+        MSG_SET_LINEAR_COUNT
+        //==================end of customized item===============
     };
 
     static void handle_can_message(can_Message_t& msg);
@@ -62,10 +69,16 @@ class CANSimple {
     static void get_sensorless_estimates_callback(Axis* axis, can_Message_t& msg);
     static void get_vbus_voltage_callback(Axis* axis, can_Message_t& msg);
     static void set_pi_gain(Axis* axis, can_Message_t& msg);
-
     // Utility functions
     static uint8_t get_node_id(uint32_t msgID);
     static uint8_t get_cmd_id(uint32_t msgID);
+    //==================customized item===============
+    static void set_position_gain_callback(Axis* axis, can_Message_t& msg);
+    static void clear_error_callback(Axis* axis, can_Message_t& msg);
+    static void get_current_limit_callback(Axis* axis, can_Message_t& msg);
+    static void set_current_limit_callback(Axis* axis, can_Message_t& msg);
+    static void linear_count_callback(Axis* axis, can_Message_t& msg);
+    //==================end of customized item===============
 
     // Fetch a specific signal from the message
 

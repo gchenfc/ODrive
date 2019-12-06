@@ -118,14 +118,78 @@ void CANSimple::handle_can_message(can_Message_t& msg) {
 			case MSG_SET_PI_GAIN:
 				set_pi_gain(axis, msg);
 				break;
+            case MSG_SET_POSITION_GAIN:
+                set_position_gain_callback(axis, msg);
+                break;
+            case MSG_CLEAR_ERROR:
+                clear_error_callback(axis, msg);
+                break;
+            case MSG_GET_CURRENT_LIMIT:
+                get_current_limit_callback(axis, msg);
+                break;
+            case MSG_SET_CURRENT_LIMIT:
+                set_current_limit_callback(axis, msg);
+                break;
+            case MSG_SET_LINEAR_COUNT:
+                linear_count_callback(axis, msg);
+                break;
             default:
                 break;
         }
     }
 }
+//===============customzied function================
+void CANSimple::set_position_gain_callback(Axis* axis, can_Message_t& msg){
+    axis->controller_.config_.pos_gain = can_getSignal<float>(msg, 0, 32, true, 1, 0);
+}
+void CANSimple::clear_error_callback(Axis* axis, can_Message_t& msg){
+    //axis->controller_.config_.pos_gain = can_getSignal<float>(msg, 0, 32, true, 1, 0);
+    axis->motor_.error_ = Motor::Error_t::ERROR_NONE;
+    axis->encoder_.error_ = Encoder::Error_t::ERROR_NONE;
+    axis->sensorless_estimator_.error_ = SensorlessEstimator::Error_t::ERROR_NONE;
+    axis->controller_.error_ = Controller::Error_t::ERROR_NONE;
+    axis->error_= Axis::Error_t::ERROR_NONE;
+}
+void CANSimple::get_current_limit_callback(Axis* axis, can_Message_t& msg){
+    if (msg.rtr) {
+        can_Message_t txmsg;
 
+        txmsg.id = axis->config_.can_node_id << NUM_CMD_ID_BITS;
+        txmsg.id += MSG_GET_CURRENT_LIMIT;
+        txmsg.isExt = false;
+        txmsg.len = 8;
+
+        uint32_t floatBytes;
+        static_assert(sizeof axis->motor_.config_.current_lim == sizeof floatBytes);
+        std::memcpy(&floatBytes, &(axis->motor_.config_.current_lim), sizeof floatBytes);
+
+        // This also works in principle, but I don't have hardware to verify endianness
+        // std::memcpy(&txmsg.buf[0], &vbus_voltage, sizeof vbus_voltage);
+
+        txmsg.buf[0] = floatBytes;
+        txmsg.buf[1] = floatBytes >> 8;
+        txmsg.buf[2] = floatBytes >> 16;
+        txmsg.buf[3] = floatBytes >> 24;
+
+        txmsg.buf[4] = 0;
+        txmsg.buf[5] = 0;
+        txmsg.buf[6] = 0;
+        txmsg.buf[7] = 0;
+
+        odCAN->write(txmsg);
+    }
+    
+}
+void CANSimple::set_current_limit_callback(Axis* axis, can_Message_t& msg){
+    axis->motor_.config_.current_lim = can_getSignal<float>(msg, 0, 32, true, 1, 0);
+}
+void CANSimple::linear_count_callback(Axis* axis, can_Message_t& msg){
+    axis->encoder_.set_linear_count(static_cast<int32_t>(can_getSignal<int32_t>(msg, 0, 32, true, 1, 0)));
+}
+//================end of customized function============
 void CANSimple::nmt_callback(Axis* axis, can_Message_t& msg) {
     // Not implemented
+
 }
 
 void CANSimple::estop_callback(Axis* axis, can_Message_t& msg) {

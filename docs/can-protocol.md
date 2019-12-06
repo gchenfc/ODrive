@@ -60,6 +60,11 @@ CMD ID | Name | Sender | Signals | Start byte
 0x016 | Reboot ODrive | Master\*\*\* | | 
 0x017 | Get Vbus Voltage | Master\*\*\* | Vbus Voltage | 0
 0x018 | Set Vel PI-gain | Master\*\*\* | P-gain<br>I-gain | 0<br>4
+0x019 | MSG_SET_POSITION_GAIN | Master | P-gain | 0
+0x020 | MSG_CLEAR_ERROR | Master | - | -
+0x021 | MSG_GET_CURRENT_LIMIT | Axis | Current Limit | 0
+0x022 | MSG_SET_CURRENT_LIMIT | Master | Current Limit | 0
+0x023 | MSG_SET_LINEAR_COUNT | Master | Encoder Count | 0
 
 \* Note: These messages are call & response.  The Master node sends a message with the RTR bit set, and the axis responds with the same ID and specified payload.  
 \*\* Note:  These CANOpen messages are reserved to avoid bus collisions with CANOpen devices.  They are not used by CAN Simple.
@@ -98,6 +103,9 @@ Sensorless Vel Estimate | IEEE 754 Float | 32 | 1 | 0 | Intel
 Vbus Voltage | IEEE 754 Float | 32 | 1 | 0 | Intel
 Velocity P-gain | IEEE 754 Float | 32 | 1 | 0 | Intel
 Velocity I-gain | IEEE 754 Float | 32 | 1 | 0 | Intel
+Position P-gain | IEEE 754 Float | 32 | 1 | 0 | Intel
+Current Limit | IEEE 754 Float | 32 | 1 | 0 | Intel
+New Encoder Count | Signed Int | 32 | 1 | 0 | Intel
 
 ---
 ## Configuring ODrive for CAN
