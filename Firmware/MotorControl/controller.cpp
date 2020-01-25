@@ -67,6 +67,14 @@ void Controller::move_incremental(float displacement, bool from_goal_point = tru
     }
 }
 
+float Controller::write_anticogging_map(uint16_t index, float value){
+    if (index >= 8192)
+        return -9999999;
+    if (!std::isnan(value))
+        anticogging_.cogging_map[index] = value;
+    return anticogging_.cogging_map[index];
+}
+
 void Controller::start_anticogging_calibration() {
     // Ensure the cogging map was correctly allocated earlier and that the motor is capable of calibrating
     if (anticogging_.cogging_map != NULL && axis_->error_ == Axis::ERROR_NONE) {

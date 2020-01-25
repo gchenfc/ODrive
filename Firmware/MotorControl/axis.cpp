@@ -327,7 +327,7 @@ void Axis::run_state_machine_loop() {
     // TODO: Move this somewhere else
     // TODO: respect changes of CPR
     int encoder_cpr = encoder_.config_.cpr;
-    controller_.anticogging_.cogging_map = (float*)malloc(encoder_cpr * sizeof(float));
+    // controller_.anticogging_.cogging_map = (float*)malloc(encoder_cpr * sizeof(float));
     if (controller_.anticogging_.cogging_map != NULL) {
         for (int i = 0; i < encoder_cpr; i++) {
             controller_.anticogging_.cogging_map[i] = 0.0f;
