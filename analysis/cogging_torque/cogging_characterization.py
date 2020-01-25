@@ -10,13 +10,15 @@ odrv0.axis0.motor.config.current_lim_tolerance = 10
 from importlib import reload
 sys.path.append('.')
 
+with drum:
 pos_gain = 100 (float)
 vel_gain = 0.0007140250527299941 (float)
 vel_integrator_gain = 0.004641162697225809 (float)
 
-pos_gain = 100 (float)
-vel_gain = 0.00019999999494757503 (float)
-vel_integrator_gain = 0.0009999999310821295 (float)
+without drum:
+odrv0.axis0.controller.config.pos_gain = 100
+odrv0.axis0.controller.config.vel_gain = 0.00019999999494757503
+odrv0.axis0.controller.config.vel_integrator_gain = 0.0009999999310821295       
 """
 def find_cog(odrv0, step=4*4, waittime=3, offset=0, a=None, reverse=False):
     if a is None:
@@ -34,6 +36,48 @@ def find_cog(odrv0, step=4*4, waittime=3, offset=0, a=None, reverse=False):
             np.save('bak/cogging_measure_{:03d}'.format(8191-i if reverse else i), a)
     np.save('cogging_measure_final'.format(backup_i), a)
     return a
+
+def write_anticogging_map(odrv0, map):
+    for i in range(8192):
+        odrv0.axis0.controller.anticogging.write_anticogging_map(i, map[i])
+
+def read_anticogging_map(odrv0, inds=range(8192)):
+    amap = []
+    nan = float('nan')
+    for i in inds:
+        amap.append(odrv0.axis0.controller.anticogging.write_anticogging_map(i, nan))
+    return amap
+
+def slowveltest(odrv0, vel=1, rev=1, fname='slow'):
+    ts = []
+    poss = []
+    curs = []
+    odrv0.axis0.controller.set_pos_setpoint(0, 0, 0)
+    start_t = time.time()
+    while time.time() < (start_t + rev/vel):
+        t_, pos_, cur_ = time.time()-start_t, odrv0.axis0.encoder.pos_estimate, odrv0.axis0.motor.current_control.Iq_measured
+        ts.append(t_)
+        poss.append(pos_)
+        curs.append(cur_)
+        odrv0.axis0.controller.set_pos_setpoint(vel * (time.time()-start_t) * 8192, 0, 0)
+    np.save(fname, [ts, poss, curs])
+    odrv0.axis0.controller.set_pos_setpoint(0, 0, 0)
+    return ts, poss, curs
+
+def slowveltest2(odrv0, vel=1, rev=1, fname='slow2'):
+    ts = []
+    poss = []
+    curs = []
+    odrv0.axis0.controller.set_vel_setpoint(vel, 0)
+    start_t = time.time()
+    while time.time() < (start_t + rev/vel):
+        t_, pos_, cur_ = time.time()-start_t, odrv0.axis0.encoder.pos_estimate, odrv0.axis0.motor.current_control.Iq_measured
+        ts.append(t_)
+        poss.append(pos_)
+        curs.append(cur_)
+    np.save(fname, [ts, poss, curs])
+    odrv0.axis0.controller.set_pos_setpoint(0, 0, 0)
+    return ts, poss, curs
 
 def spinuptest(odrv0, target_pos = 10000, current = 1):
     t = []
