@@ -2,6 +2,11 @@
 
 Please see `cogging_characterization.py` for implementation details.
 
+* [Cogging map](#cogging-map)
+* [Acceleration tests](#acceleration-tests)
+* [Slow Tests](#slow-tests)
+* [Pull tests](#pull-tests)
+
 ## Cogging map
 coggingmap_0 was measured on axis 0 
 
@@ -45,3 +50,23 @@ Anti-cogging totally helps and I think it's sufficient for my needs.
 Videos on my phone as well corroborate.
 
 Also, **cogging maps are 100% dependent upon adjacent motors and iron.**  It is so obvious when you turn compensation on, set current to 0, and then spin the motors with your hands.  There is one particular location of the passive motor (axis 1) that the cogging map for axis 0 was measured at and you can feel that as soon as axis 1 snaps into that position, axis 0 can spin freely.  At other locations, axis 0 cogs even more than without anti-cogging compensation.
+
+## Pull tests
+Let one motor be passive (0A current control) and tie string to another motor (active) which is pulling.  Measure position and current of the active motor.  All data in folder [pull_tests](./pull_tests).
+
+### Descirptions
+
+| filename | passive motor compensation | active motor compensation | speed (rev/s) |
+| --- | --- | --- | --- |
+| `comp_fast` | ON | OFF | 10 |
+| `comp_slow` | ON | OFF | 1 |
+| `uncomp_fast` | OFF | OFF | 10 |
+| `uncomp_slow` | OFF | OFF | 1 |
+
+### Results / Conclusions
+
+![position tracking error w/ and w/o anticogging compensation](pull_tests/summary.png)
+
+In the left plots (slow motion), notice the peaks both the vel and current waveforms.  These peaks are the cogs which screw up torque control, which are improved by a factor of about 2 for current using anticogging compensation on the passive motor only.  On the right side (fast motion), we see that the spikes are less significant for both w/ and w/o compensation which is exactly what we predict since rotor inertia smooths out the torque ripples.
+
+Note that I haven't yet collected data where both passive and active motors are using anti-cogging compensation, but I would expect the current spikes to get even smaller in this case.
