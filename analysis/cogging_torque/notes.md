@@ -35,7 +35,7 @@ tests 0-2 are unloaded.  Unloaded motor has moment of inertia ~0.002[units] (I f
 TODO: commit analysis/plots from other computer
 
 ## Slow tests
-Spin the motor slowly and see how much oscillation there is **with and without anti-cogging compensation**.
+Spin the motor slowly and see how much oscillation (position error) there is **with and without anti-cogging compensation**.
 
 ### Description
 * slow_goodgains - command **position setpoints**.  first set of tests with correct (unloaded motor) gains.  setpoint 0.1 rev/s.  
@@ -45,9 +45,15 @@ Spin the motor slowly and see how much oscillation there is **with and without a
 * slow2_slower - move slower.  setpoint 0.03 rev/s
 
 ### Results/Conclusions
+
+![position tracking error when slowly moving at 0.10 rev/s](slow2/trackingerror_anticogging.png)
+![position tracking error when slowly moving at 0.03 rev/s](slow2_slower/trackingerror_anticogging_slower.png)
+
 Anti-cogging totally helps and I think it's sufficient for my needs.
 
-Videos on my phone as well corroborate.
+Videos on my phone/spring2020 meeting slides corroborate as well.
+
+![position tracking error with and without crosstalk with adjacent motors](slow2_slower/trackingerror_anticogging_crosstalk.png)
 
 Also, **cogging maps are 100% dependent upon adjacent motors and iron.**  It is so obvious when you turn compensation on, set current to 0, and then spin the motors with your hands.  There is one particular location of the passive motor (axis 1) that the cogging map for axis 0 was measured at and you can feel that as soon as axis 1 snaps into that position, axis 0 can spin freely.  At other locations, axis 0 cogs even more than without anti-cogging compensation.
 
