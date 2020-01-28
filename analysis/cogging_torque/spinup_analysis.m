@@ -1,57 +1,82 @@
-load spinup_2
+clear
+set(0,'defaultAxesFontSize',20)
+set(0,'defaulttextInterpreter','latex');
+set(groot, 'defaultAxesTickLabelInterpreter','latex');
+set(groot, 'defaultLegendInterpreter','latex');
+set(groot, 'defaultLineMarkerSize', 7);
+set(groot, 'defaultLineLineWidth', 1);
 
-setcur = data(1,:);
-t = data(2,:);
-pos = data(3,:);
-cur = data(4,:);
-
-% plot raw data
-figure(1);clf;
-for i = 1:length(setcur)
-    subplot(2, fix(length(setcur)/2), fix((i-1)/2)+1)
-    plot(t{i}, pos{i})
-    hold on
-    subplot(2, fix(length(setcur)/2), fix((i-1)/2)+1+fix(length(setcur)/2))
-    plot(t{i}, cur{i})
-    hold on
+%% load stuff
+comp = [];
+for i = [3,7,8]
+    load(sprintf('accel_tests/spinup_%d_comp', i))
+    obj.setcur = data(1,:);
+    obj.t = data(2,:);
+    obj.pos = data(3,:);
+    obj.cur = data(4,:);
+    obj.linestyle = 'b-';
+    comp = [comp, obj];
 end
-% axes[0, 0].set_ylabel('Pos')
-% axes[1, 0].set_ylabel('Cur')
-% suptitle('Ramp raw data')
+nocomp = [];
+for i = [4,5,6]
+    load(sprintf('accel_tests/spinup_%d_nocomp', i))
+    obj.setcur = data(1,:);
+    obj.t = data(2,:);
+    obj.pos = data(3,:);
+    obj.cur = data(4,:);
+    obj.linestyle = 'r-';
+    nocomp = [nocomp, obj];
+end
+
+%% extract accelerations
+for i = 1:length(comp)
+    comp(i).setcurs = [];
+    comp(i).as = [];
+    for setcuri = 1:length(comp(i).setcur)
+        P = polyfit(comp(i).t{setcuri}, comp(i).pos{setcuri} / 8192, 2);
+        comp(i).a(setcuri) = 2*P(1);
+        comp(i).setcurs = [comp(i).setcurs, comp(i).setcur{setcuri}*-(-1).^setcuri];
+        comp(i).as = [comp(i).as, comp(i).a(setcuri)];
+    end
+    [comp(i).setcurs, I] = sort(comp(i).setcurs);
+    comp(i).as = comp(i).as(I);
+end
+for i = 1:length(nocomp)
+    nocomp(i).setcurs = [];
+    nocomp(i).as = [];
+    for setcuri = 1:length(nocomp(i).setcur)
+        P = polyfit(nocomp(i).t{setcuri}, nocomp(i).pos{setcuri} / 8192, 2);
+        nocomp(i).a(setcuri) = 2*P(1);
+        nocomp(i).setcurs = [nocomp(i).setcurs, nocomp(i).setcur{setcuri}*-(-1).^setcuri];
+        nocomp(i).as = [nocomp(i).as, nocomp(i).a(setcuri)];
+    end
+    [nocomp(i).setcurs, I] = sort(nocomp(i).setcurs);
+    nocomp(i).as = nocomp(i).as(I);
+end
+
+%% plot acc vs cur
+figure(2);clf;
+allp = [];
+for dat = [nocomp, comp]
+    p = plot(dat.setcurs, dat.as, dat.linestyle, 'LineWidth', 2);
+    hold on;
+    allp = [allp, p];
+end
 
 %%
-% plot acc vs cur
-figure(2);clf;
-for i = 1:length(setcur)-1
-    t{i} = smooth(t{i}, 105, 'sgolay')';
-    pos2{i} = smooth(pos{i}, 105, 'sgolay')' / 8192;
-    cur{i} = smooth(cur{i}, 15, 'sgolay')';
-    acc = gradient(gradient(pos2{i}) ./ gradient(t{i})) ./ gradient(t{i});
-    P = polyfit(t{i}, pos{i} / 8192, 2);
-    a = 2*P(1);
-    toplot = [cur{i}', acc'];
-    toplot = rmoutliers(toplot);
-    toplot = mean(toplot);
-%     figure(2);
-%     plot(toplot(:,1), toplot(:,2), 'k*',...
-%          'DisplayName', sprintf('I=%.1f',setcur{i}))
-    hold on
-    plot(setcur{i} * -(-1).^i, a, 'ro',...
-         'DisplayName', sprintf('I=%.1f',setcur{i}))
-%     figure(3);
-%     plot(toplot(:,2));
-%     hold on;
-end
-
-ivals = linspace(-setcur{end}, setcur{end});
+ivals = linspace(-dat.setcur{end}, dat.setcur{end});
 % I = 1.00E-04; % kg.m^2
 I = 2.5E-4;
 Tvals = ivals / 150 * 8.269933431; % Nm
 avals = Tvals / I / 2 / pi;
-plot(ivals, avals, 'k--');
-xlabel('Current (A)');
-ylabel('Angular acceleration (r/s^2)');
+p = plot(ivals, avals, 'k--');
+allp = [allp, p];
+xlabel('Setpoint Current (A)');
+ylabel('Angular acceleration ($rad/s^2$)');
 
 % legend show
+legend([allp(1), allp(4), allp(end)], ...
+       'Before Compensation', 'After Compensation', 'Ideal',...
+       'Location', 'SouthEast');
 grid on
-title('Torque vs Current');
+title('Torque vs Current (vs Compensation)');

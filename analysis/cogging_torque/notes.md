@@ -25,14 +25,20 @@ coggingmap_0 was measured on axis 0
 
 The first gif shows the cogging maps from a-d, with c being adjusted by 180 degrees.  The second also shows e (the reversed one) and evidences some dc bias/friction.  Nevertheless, they're all very consistent.
 
-Also, I later [(Slow tests)](#slow-tests) figured out why sometimes the cogging map is "randomly" 180 degrees off.  It's because of the other motor **crosstalk**.  See discussion in [Slow tests](#resultsconclusions-1)
+Also, I later [(Slow tests)](#slow-tests) figured out why sometimes the cogging map is "randomly" 180 degrees off.  It's because of the other motor **crosstalk**.  See discussion in [Slow tests](#resultsconclusions-2)
 
 ## Acceleration tests
-spinup the motor with set current and observe acceleration
+spinup the motor with set current and observe acceleration.  Trials are back-to-back so the motor experiences deceleration then acceleration for most measurement points.
 
-tests 0-2 are unloaded.  Unloaded motor has moment of inertia ~0.002[units] (I forget the units, but it's roughly twice what odrive claims of their higher Kv motor).
+### description
+tests 0-2 are unloaded and uncompensated, but not very high quality.  Unloaded motor has moment of inertia ~0.00025[kg.m^2].  Tests 3-8 are better quality, measured from 0A-2.5A measured every 0.1A.  3 trials with compensation and 3 trials without.
 
-TODO: commit analysis/plots from other computer
+### Results/Conclusions
+![acceleration map without compensation](accel_tests/torque_vs_current_comp_compare_annotated.png)
+
+The plot shows two key aspects of the motion.  
+1. **Outliers** - Non-compensated motion results in a lot of (low acceleration) outliers which indicates the motor was likely *randomly* unable to start due to cogging, which is very bad and hard to control.  In contrast, *with* anti-cogging compensation, the acceleration vs current is remarkably predictable, with the 3 trials hardly differing from eachother at all.
+2. **Cogging Torque "Gap"** - The cogging torque is most significant at slow speeds.  We see this gap in the graph where, for non-compensated motion, we do not see torque until ~0.75A whereas we expect to see torque beginning around 0.3A if "kinetic and static friction are the same".  After applying compensation, we see that the torque begins much closer to what we expect.  From this graph, we can actually estimate the cogging torque to be roughly the torque in the compensated motion when the uncompensated motion finally begins, which is around 15 rad/s^2 <=> **0.4A** <=> 3N.<span></span>mm
 
 ## Slow tests
 Spin the motor slowly and see how much oscillation (position error) there is **with and without anti-cogging compensation**.
@@ -60,7 +66,7 @@ Also, **cogging maps are 100% dependent upon adjacent motors and iron.**  It is 
 ## Pull tests
 Let one motor be passive (0A current control) and tie string to another motor (active) which is pulling.  Measure position and current of the active motor.  All data in folder [pull_tests](./pull_tests).
 
-### Descirptions
+### Descriptions
 
 | filename | passive motor compensation | active motor compensation | speed (rev/s) |
 | --- | --- | --- | --- |
