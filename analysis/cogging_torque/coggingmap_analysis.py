@@ -8,10 +8,10 @@ else:
     fname = 'cogging_measure_final_a_4'
 data_raw = np.load(fname+'.npy')
 
-data = data_raw[0::4]
+data = data_raw[0::16]
 # data = np.roll(data, 256)
 
-encoder_cpr = 8192/4
+encoder_cpr = 8192/16
 stator_slots = 12
 pole_pairs = 7
 
@@ -28,19 +28,19 @@ fft_sparse = fft.copy()
 indicies = np.arange(fft_sparse.size)
 mask = [i not in harmonics for i in indicies]
 fft_sparse[mask] = 0.0
-interp_data = np.fft.irfft(fft_sparse, n = 8192) * 4
+interp_data = np.fft.irfft(fft_sparse, n = 8192) * 16
 
 #%%
 
 plt.figure(figsize=(14, 7))
 # plt.subplot(3, 1, 1)
-plt.plot(np.arange(0, 8192, 4), data, label='raw')
+plt.plot(np.arange(0, 8192, 16), data, label='raw')
 plt.plot(interp_data, label='selected harmonics IFFT')
 plt.title('cogging map')
 plt.xlabel('counts')
 plt.ylabel('A')
 plt.legend(loc='best')
-plt.ylim([-3, 3])
+# plt.ylim([-3, 3])
 
 plt.savefig(fname)
 np.save(fname+'_interp.npy', interp_data)
